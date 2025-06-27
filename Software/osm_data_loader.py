@@ -42,6 +42,10 @@ def fetch_osm_data(
                 truncate_by_edge=True
             )
 
+            # fix: Flipped coordinates gave the location of Yemen instead of Croatia, implemented extra check.
+            sample_node = next(iter(G.nodes(data=True)))[1]
+            if not (15.0 < sample_node['x'] < 20.0 and 45.0 < sample_node['y'] < 47.0):
+                raise ValueError(f"Coordinates don't match Croatia: {sample_node['x']}, {sample_node['y']}")
 
             if merged_graph is None:
                 merged_graph = G
