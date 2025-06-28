@@ -1,6 +1,7 @@
 import networkx as nx
 import osmnx as ox
 import pandas as pd
+import geopandas as gpd
 import os
 from typing import Dict, List, Optional
 
@@ -8,7 +9,8 @@ from typing import Dict, List, Optional
 def fetch_osm_data(
         place_names: List[str] = ["Varaždin, Croatia", "Čakovec, Croatia"],
         network_type: str = "drive",
-        save_to_file: Optional[str] = "data/croatia_cities.graphml"
+        save_to_file: Optional[str] = "data/croatia_cities.graphml",
+        buffer_m: float = 5000
 ) -> Dict:
     """
     Module info (Phase 1):
@@ -28,47 +30,42 @@ def fetch_osm_data(
     ox.settings.timeout = 300
     ox.settings.log_console = True
 
-    merged_graph = None
+    print("Fetching city boundaries...")
+    city_boundaries = [ox.geocode_to_gdf(name) for name in place_names]
+    city_gdf = gpd.GeoDataFrame(pd.concat(city_boundaries, ignore_index=True))
+    city_gdf.crs = "EPSG:4326"
 
-    for name in place_names:
-        try:
-            print(f"Processing: {name}")
+    if city_gdf.empty:
+        raise ValueError("Failed to fetch any city boundaries.")
 
-            G = ox.graph_from_place(
-                name,
-                network_type=network_type,
-                which_result=1,
-                retain_all=True,
-                truncate_by_edge=True
-            )
+    combined_geom = city_gdf.unary_union
 
-            # fix: Flipped coordinates gave the location of Yemen instead of Croatia, implemented extra check.
-            sample_node = next(iter(G.nodes(data=True)))[1]
-            if not (15.0 < sample_node['x'] < 20.0 and 45.0 < sample_node['y'] < 47.0):
-                raise ValueError(f"Coordinates don't match Croatia: {sample_node['x']}, {sample_node['y']}")
+    print("Buffering combined area...")
+    combined_gdf = gpd.GeoDataFrame(geometry=[combined_geom], crs=city_gdf.crs)
+    combined_proj = combined_gdf.to_crs(epsg=3857)  # Project to meters
+    buffered_proj = combined_proj.buffer(buffer_m)
+    buffered = gpd.GeoSeries(buffered_proj).set_crs(3857).to_crs(epsg=4326).iloc[0]
 
-            if merged_graph is None:
-                merged_graph = G
-            else:
-                merged_graph = nx.compose(merged_graph, G)
+    print("Downloading OSM graph from buffered area...")
+    G = ox.graph_from_polygon(
+        buffered,
+        network_type=network_type,
+        retain_all=True,
+        simplify=True,
+        truncate_by_edge=True,
+        custom_filter='["highway"~"motorway|trunk|primary|secondary|tertiary|residential"]' # Added new filter to remove unwanted roads
+    )
 
-            print(f"Added {len(G.nodes())} nodes from {name}")
+    print(f"Graph downloaded with {len(G.nodes())} nodes and {len(G.edges())} edges.")
 
-        except Exception as e:
-            print(f"Error processing {name}: {str(e)}")
-            continue
-
-    if merged_graph is None:
-        raise ValueError("No valid graphs were created for the given locations")
-
-    merged_graph = ox.distance.add_edge_lengths(merged_graph)
+    G = ox.distance.add_edge_lengths(G)
 
     if save_to_file:
-        ox.save_graphml(merged_graph, filepath=save_to_file)
+        ox.save_graphml(G, filepath=save_to_file)
         print(f"Saved merged OSM data to {save_to_file}")
 
-    nodes = [] # Node extraction
-    for node_id, data in merged_graph.nodes(data=True):
+    nodes = [] # Nodes extraction
+    for node_id, data in G.nodes(data=True):
         nodes.append({
             "id": node_id,
             "lon": data["y"],
@@ -78,21 +75,22 @@ def fetch_osm_data(
         })
 
     edges = [] # Edges extraction
-    for u, v, data in merged_graph.edges(data=True):
+    for u, v, data in G.edges(data=True):
         edges.append({
             "from": u,
             "to": v,
-            "length": data["length"],  # meters
+            "length": data.get("length", 0),
             "highway": data.get("highway", ""),
             "name": data.get("name", "")
         })
 
-    # Save nodes to CSV for inspection - TBD if this needs to be removed.
-    pd.DataFrame(nodes).to_csv("data/croatia_nodes.csv", index=False)
-    print("Saved nodes to data/croatia_nodes.csv")
+    # Save CSVs
+    pd.DataFrame(nodes).to_csv("data/OSMLoader_nodes.csv", index=False)
+    pd.DataFrame(edges).to_csv("data/OSMLoader_edges.csv", index=False)
+    print("Saved expanded nodes and edges to CSV")
 
     return {
-        "graph": merged_graph,
+        "graph": G,
         "nodes": nodes,
         "edges": edges
     }
