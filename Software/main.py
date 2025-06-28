@@ -1,12 +1,9 @@
-import pandas as pd
-import osm_data_loader as osm
-import analyze
-
+from geopy.geocoders import Nominatim
 from osm_data_loader import fetch_osm_data
 from vector_db import VectorDatabase
 
 def main():
-    osm_result = fetch_osm_data(["Varaždin, Croatia", "Čakovec, Croatia"])
+    osm_result = fetch_osm_data(["Varaždin, Croatia", "Čakovec, Croatia"]) # Will need to be altered for dynamic implementation
     graph = osm_result["graph"]
     nodes = osm_result["nodes"]
 
@@ -15,8 +12,18 @@ def main():
     db.create_embeddings(nodes)
 
     # Step 4: Define coordinates (lat, lon) for route query
-    start = (46.3057, 16.3366)  # Varaždin
-    end = (46.3843, 16.4337)    # Čakovec
+
+    geolocator = Nominatim(user_agent="vector_routing")
+
+    start_location = geolocator.geocode("Varaždin, Croatia") # Will need to be altered for dynamic implementation
+    end_location = geolocator.geocode("Čakovec, Croatia") # Will need to be altered for dynamic implementation
+
+    if not start_location or not end_location:
+        print("ERROR: Could not geocode one or both locations.")
+        return
+
+    start = (start_location.latitude, start_location.longitude)
+    end = (end_location.latitude, end_location.longitude)
 
     # Step 5: Find optimal route
     route = db.find_optimal_route(graph, start, end)
