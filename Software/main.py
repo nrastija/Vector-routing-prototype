@@ -43,8 +43,14 @@ def main():
     print(f"- Path: {route['path']}")
     print(f"- Waypoints: {len(route['waypoints'])} waypoints")
 
+    route_data = db.find_alternative_routes(graph, start, end)
 
-
+    if 'error' in route_data:
+        print(route_data['error'])
+    else:
+        print("\nAlternative routes:")
+        for alt in route_data['alternatives']:
+            print(f"Alt {alt['index']}: {alt['distance_km']:.2f} km, ~{alt['realistic_time_min']:.1f} min")
 
 if __name__ == "__main__":
     main()

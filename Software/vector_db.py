@@ -1,3 +1,5 @@
+from itertools import islice
+
 from qdrant_client import QdrantClient, models
 from qdrant_client.http.models import PointStruct
 from geopy.geocoders import Nominatim
@@ -158,6 +160,85 @@ class VectorDatabase:
                 "waypoints": waypoints,
                 "map_html": map_path,
                 "plot_path": plot_path
+            }
+
+        except Exception as e:
+            return {"error": f"Routing failed: {str(e)}"}
+
+    def find_alternative_routes(self, graph: nx.MultiDiGraph, source_coords, dest_coords):
+        if 'crs' not in graph.graph or graph.graph['crs'] is None:
+            graph.graph['crs'] = 'epsg:4326'
+
+        try:
+            source_node = ox.distance.nearest_nodes(graph, #Start node
+                                                    X=source_coords[1],
+                                                    Y=source_coords[0])
+
+            dest_node = ox.distance.nearest_nodes(graph, #End node
+                                                  X=dest_coords[1],
+                                                  Y=dest_coords[0])
+
+            if not nx.has_path(graph, source_node, dest_node):
+                return {"error": "No path exists between these nodes"}
+
+            simplified_graph = _convert_to_simple_graph(graph)
+
+            # Hybrid approach: route 3 - close alternative, route 7 . medium alternative, route 15 - long alternative
+            alternative_routes = [2, 6, 14]
+
+            all_paths = list(islice(
+                nx.shortest_simple_paths(simplified_graph, source_node, dest_node, weight='length'),
+                max(alternative_routes) + 1
+            ))
+
+            selected_paths = [all_paths[i] for i in alternative_routes]# Skip optimal path - function find_optimal_route
+
+            routes = []
+            for i, path in enumerate(selected_paths):
+                total_distance = 0
+                ideal_time_min = 0
+
+                for u, v in zip(path[:-1], path[1:]):
+                    if graph.has_edge(u, v):
+                        edges = graph[u][v]
+                        best_edge = min(edges.values(), key=lambda e: e.get('length', float('inf')))
+                        length_m = best_edge.get('length', 0)
+                        total_distance += length_m
+
+                        road_type = best_edge.get('highway', 'unclassified')
+                        if isinstance(road_type, list):
+                            road_type = road_type[0]
+
+                        speed_kmh = SPEED_LIMITS.get(road_type, 50)
+                        edge_km = length_m / 1000
+                        ideal_time_min += (edge_km / speed_kmh) * 60
+
+                realistic_time_min = ideal_time_min * 1.3
+                distance_km = total_distance / 1000
+                average_speed_kmh = total_distance / (realistic_time_min / 60)
+                waypoints = [(graph.nodes[n]['y'], graph.nodes[n]['x']) for n in path]
+
+                # Save map for each route
+                map_path = f"data/routes/route_alt_{i + 1}.html"
+                m = folium.Map(location=source_coords, zoom_start=12)
+                folium.PolyLine(waypoints, color="blue", weight=5, opacity=0.7).add_to(m)
+                folium.Marker(waypoints[0], popup="Start", icon=folium.Icon(color='green')).add_to(m)
+                folium.Marker(waypoints[-1], popup="End", icon=folium.Icon(color='red')).add_to(m)
+                m.save(map_path)
+
+                routes.append({
+                    "index": i + 1,
+                    "path": path,
+                    "distance_km": distance_km,
+                    "ideal_time_min": ideal_time_min,
+                    "realistic_time_min": realistic_time_min,
+                    "average_speed_kmh": average_speed_kmh,
+                    "waypoints": waypoints,
+                    "map_html": map_path
+                })
+
+            return {
+                "alternatives": routes
             }
 
         except Exception as e:
