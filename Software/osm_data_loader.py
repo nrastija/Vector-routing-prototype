@@ -5,31 +5,30 @@ import geopandas as gpd
 import os
 from typing import Dict, List, Optional
 
-
 def fetch_osm_data(
         place_names: List[str] = ["Varaždin, Croatia", "Čakovec, Croatia"],
         network_type: str = "drive",
         save_to_file: Optional[str] = "data/croatia_cities.graphml",
-        buffer_m: float = 5000
+        padding_km: float = 5
 ) -> Dict:
     """
-    Module info (Phase 1):
-
-    Fetch OSM data for multiple cities and merge their networks.
+    Fetch and merge OSM data for multiple cities using an expanded bounding box.
 
     Args:
-        place_names: List of OSM-compatible place names - IMPORTANT! In the thesis the focus is on Varaždin and Čakovec in the Varaždin province.
-        network_type: "drive", "walk", "bike" - IMPORTANT! Development is integrated with the "drive" type.
-        save_to_file: Save merged graph to this path. This is used for post run graph generation and data analysis.
+        place_names: List of OSM-compatible place names
+        network_type: "drive", "walk", "bike"
+        save_to_file: Optional path to save the merged graph
+        padding_km: Extra distance added to bbox in all directions
 
     Returns:
-        {"graph": merged NetworkX graph (.GRAPHML file), "nodes": list, "edges": list}
+        dict with "graph", "nodes", and "edges"
     """
     os.makedirs("data", exist_ok=True)
 
     ox.settings.timeout = 300
     ox.settings.log_console = True
 
+    # 1. Fetch city boundaries
     print("Fetching city boundaries...")
     city_boundaries = [ox.geocode_to_gdf(name) for name in place_names]
     city_gdf = gpd.GeoDataFrame(pd.concat(city_boundaries, ignore_index=True))
@@ -38,33 +37,35 @@ def fetch_osm_data(
     if city_gdf.empty:
         raise ValueError("Failed to fetch any city boundaries.")
 
-    combined_geom = city_gdf.unary_union
+    # 2. Bounding Box
+    bounds = city_gdf.total_bounds  # [minx, miny, maxx, maxy] → [W, S, E, N]
+    west, south, east, north = bounds
+    padding_deg = padding_km / 111
 
-    print("Buffering combined area...")
-    combined_gdf = gpd.GeoDataFrame(geometry=[combined_geom], crs=city_gdf.crs)
-    combined_proj = combined_gdf.to_crs(epsg=3857)  # Project to meters
-    buffered_proj = combined_proj.buffer(buffer_m)
-    buffered = gpd.GeoSeries(buffered_proj).set_crs(3857).to_crs(epsg=4326).iloc[0]
+    north += padding_deg
+    south -= padding_deg
+    east += padding_deg
+    west -= padding_deg
 
-    print("Downloading OSM graph from buffered area...")
-    G = ox.graph_from_polygon(
-        buffered,
+    # 3. Download graph from bbox
+    print("Downloading OSM graph from bounding box...")
+    G = ox.graph_from_bbox(
+        bbox=(west, south, east, north),
         network_type=network_type,
         retain_all=True,
         simplify=True,
         truncate_by_edge=True,
-        custom_filter='["highway"~"motorway|trunk|primary|secondary|tertiary|residential"]' # Added new filter to remove unwanted roads
+        custom_filter='["highway"~"motorway|trunk|primary|secondary|tertiary|residential"]'
     )
-
     print(f"Graph downloaded with {len(G.nodes())} nodes and {len(G.edges())} edges.")
-
     G = ox.distance.add_edge_lengths(G)
 
     if save_to_file:
         ox.save_graphml(G, filepath=save_to_file)
         print(f"Saved merged OSM data to {save_to_file}")
 
-    nodes = [] # Nodes extraction
+    # 4. Extract nodes
+    nodes = []
     for node_id, data in G.nodes(data=True):
         nodes.append({
             "id": node_id,
@@ -74,7 +75,8 @@ def fetch_osm_data(
             "vector": [data["y"], data["x"]]
         })
 
-    edges = [] # Edges extraction
+    # 5. Extract edges
+    edges = []
     for u, v, data in G.edges(data=True):
         edges.append({
             "from": u,
@@ -94,3 +96,4 @@ def fetch_osm_data(
         "nodes": nodes,
         "edges": edges
     }
+## NOVI OSM DATA LOADER
