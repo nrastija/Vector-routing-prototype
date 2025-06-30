@@ -20,6 +20,18 @@ def _convert_to_simple_graph(graph: nx.MultiDiGraph) -> nx.DiGraph:
 
     return simple_graph
 
+# Standardized speed limits (standard is Croatian)
+SPEED_LIMITS = {
+    "motorway": 130,
+    "trunk": 110,
+    "primary": 90,
+    "secondary": 80,
+    "tertiary": 70,
+    "residential": 50,
+    "unclassified": 60,
+    "service": 30
+}
+
 
 class VectorDatabase:
     def __init__(self, vector_size: int = 64):
@@ -75,13 +87,30 @@ class VectorDatabase:
                                     weight='length')
 
             total_distance = 0
+            ideal_time_min = 0
+            realistic_time_min = 0
+
             for u, v in zip(path[:-1], path[1:]):
                 if graph.has_edge(u, v):
                     edges = graph[u][v]
-                    min_length = min(edge_data.get('length', 0) for edge_data in edges.values())
-                    total_distance += min_length
+                    best_edge = min(edges.values(), key=lambda e: e.get('length', float('inf')))
+                    length_m = best_edge.get('length', 0)
+                    total_distance += length_m
+
+                    road_type = best_edge.get('highway', 'unclassified')
+                    if isinstance(road_type, list):
+                        road_type = road_type[0]
+
+                    # Travel time calculation
+                    speed_kmh = SPEED_LIMITS.get(road_type, 50)
+                    edge_km = length_m / 1000
+                    ideal_time_min += (edge_km / speed_kmh) * 60
+                    realistic_time_min = ideal_time_min * 1.3 # 30% buffer for estimated traffic
+
 
             distance = total_distance / 1000
+
+            average_speed_kmh = distance / (realistic_time_min / 60)
 
             waypoints = [(graph.nodes[n]['y'], graph.nodes[n]['x']) for n in path]
 
@@ -117,11 +146,15 @@ class VectorDatabase:
                 popup="End",
                 icon=folium.Icon(color='red')
             ).add_to(m)
+
             m.save(map_path)
 
             return {
                 "path": path,
                 "distance_km": distance,
+                "ideal_time_min": ideal_time_min,
+                "realistic_time_min": realistic_time_min,
+                "average_speed_kmh": average_speed_kmh,
                 "waypoints": waypoints,
                 "map_html": map_path,
                 "plot_path": plot_path

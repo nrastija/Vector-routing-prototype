@@ -3,7 +3,8 @@ from osm_data_loader import fetch_osm_data
 from vector_db import VectorDatabase
 
 def main():
-    osm_result = fetch_osm_data(["Zagreb, Croatia", "Pécs, Hungary"]) # Will need to be altered for dynamic implementation
+    city_data = ["Varaždin, Croatia", "Čakovec, Croatia"]
+    osm_result = fetch_osm_data(city_data) # Will need to be altered for dynamic implementation
     graph = osm_result["graph"]
     nodes = osm_result["nodes"]
 
@@ -15,8 +16,8 @@ def main():
 
     geolocator = Nominatim(user_agent="vector_routing")
 
-    start_location = geolocator.geocode("Zagreb, Croatia") # Will need to be altered for dynamic implementation
-    end_location = geolocator.geocode("Pécs, Hungary") # Will need to be altered for dynamic implementation
+    start_location = geolocator.geocode(city_data[0]) # Will need to be altered for dynamic implementation
+    end_location = geolocator.geocode(city_data[1]) # Will need to be altered for dynamic implementation
 
     if not start_location or not end_location:
         print("ERROR: Could not geocode one or both locations.")
@@ -33,7 +34,12 @@ def main():
         return
 
     print("Optimal Route:")
+    print(f"- From: {city_data[0]}")
+    print(f"- To: {city_data[1]}")
     print(f"- Distance: {route['distance_km']:.2f} km")
+    print(f"- Estimated Ideal Time: {route['ideal_time_min']:.1f} minutes")
+    print(f"- Estimated Realistic Time: {route['realistic_time_min']:.1f} minutes")
+    print(f"- Average speed: {route['average_speed_kmh']:.2f} km/h")
     print(f"- Path: {route['path']}")
     print(f"- Waypoints: {len(route['waypoints'])} waypoints")
 
