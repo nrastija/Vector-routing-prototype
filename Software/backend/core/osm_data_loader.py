@@ -23,7 +23,7 @@ def fetch_osm_data(
     Returns:
         dict with "graph", "nodes", and "edges"
     """
-    os.makedirs("data", exist_ok=True)
+    os.makedirs("../data", exist_ok=True)
 
     ox.settings.timeout = 300
     ox.settings.log_console = True
@@ -87,8 +87,8 @@ def fetch_osm_data(
         })
 
     # Save CSVs
-    pd.DataFrame(nodes).to_csv("data/OSMLoader_nodes.csv", index=False)
-    pd.DataFrame(edges).to_csv("data/OSMLoader_edges.csv", index=False)
+    pd.DataFrame(nodes).to_csv("../data/OSMLoader_nodes.csv", index=False)
+    pd.DataFrame(edges).to_csv("../data/OSMLoader_edges.csv", index=False)
     print("Saved expanded nodes and edges to CSV")
 
     return {
