@@ -116,7 +116,7 @@ class VectorDatabase:
 
             waypoints = [(graph.nodes[n]['y'], graph.nodes[n]['x']) for n in path]
 
-            plot_path = "../data/routes/route_static_DB.png"
+            plot_path = "data/routes/route_static_DB.png"
             fig, ax = ox.plot_graph_route(
                 graph,
                 path,
@@ -130,7 +130,7 @@ class VectorDatabase:
             plt.close()
 
             # Generate Folium map
-            map_path = "../data/routes/route_map_DB.html"
+            map_path = "data/routes/route_map_DB.html"
             m = folium.Map(location=source_coords, zoom_start=13)
             folium.PolyLine(
                 waypoints,

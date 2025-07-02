@@ -7,7 +7,7 @@ router = APIRouter()
 db = VectorDatabase()
 
 # --- Optimal Route ---
-@router.post("/route/optimal", tags=["Routing"], response_model=RouteResponse)
+@router.post("/optimal", tags=["Routing"], response_model=RouteResponse)
 def get_optimal_route(data: RouteRequest):
     result = db.find_optimal_route(
         graph=db.graph,

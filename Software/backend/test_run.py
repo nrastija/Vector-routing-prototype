@@ -2,7 +2,7 @@ from geopy.geocoders import Nominatim
 from backend.core.osm_data_loader import fetch_osm_data
 from backend.core.vector_db import VectorDatabase
 
-def main():
+def test_varazdin_cakovec():
     city_data = ["Varaždin, Croatia", "Čakovec, Croatia"]
     osm_result = fetch_osm_data(city_data)
     graph = osm_result["graph"]
@@ -38,5 +38,5 @@ def main():
         for alt in route_data['alternatives']:
             print(f"Alt {alt['index']}: {alt['distance_km']:.2f} km, ~{alt['realistic_time_min']:.1f} min")
 
-if __name__ == "__test_run__":
-    main()
+
+test_varazdin_cakovec()
