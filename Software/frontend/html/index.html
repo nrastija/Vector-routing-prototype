@@ -1,10 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="UTF-8" />
+  <title>Route Planner</title>
+
+  <!-- Leaflet JS & Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <h1>Test</h1>
+
+<body class="h-screen w-screen overflow-hidden">
+  <div class="flex h-full">
+    <!-- Sidebar -->
+    <div class="w-1/3 bg-gray-100 p-6 flex flex-col justify-between shadow-md">
+      <div>
+        <h1 class="text-2xl font-bold mb-4">Vector Route Planner</h1>
+        <p class="text-sm mb-6 text-gray-700">
+          Vector database route planner developed as part of my Thesis. Powered by <a href="https://leafletjs.com/" class="text-blue-600 hover:underline">Leaflet</a> and <a href="https://fastapi.tiangolo.com/" class="text-blue-600 hover:underline">FastAPI</a>  backend.
+        </p>
+
+        <div class="mb-4">
+          <label for="from" class="block text-sm font-medium text-gray-700">Start:</label>
+          <input id="from" class="w-full mt-1 p-2 border border-gray-300 rounded" placeholder="e.g. Varaždin">
+        </div>
+
+        <div class="mb-4">
+          <label for="to" class="block text-sm font-medium text-gray-700">Destination:</label>
+          <input id="to" class="w-full mt-1 p-2 border border-gray-300 rounded" placeholder="e.g. Čakovec">
+        </div>
+
+        <div class="mb-4">
+          <label for="type" class="block text-sm font-medium text-gray-700">Route Type:</label>
+          <select id="type" class="w-full mt-1 p-2 border border-gray-300 rounded">
+            <option value="optimal">Optimal</option>
+            <option value="no_motorways">No Motorways</option>
+            <option value="scenic_route">Scenic</option>
+          </select>
+        </div>
+
+        <button onclick="planRoute()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+          Plan Route
+        </button>
+      </div>
+
+      <footer class="text-xs text-gray-600 text-center mt-6">
+        © 2025 Route Planning App | FOI Thesis project
+      </footer>
+    </div>
+
+    <!-- Map -->
+    <div id="map" class="flex-1 h-full"></div>
+  </div>
+
+<script>
+  const map = L.map('map').setView([46.3074, 16.3386], 7); // Inital view focused on Varaždin center
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  async function planRoute() {
+    
+  }
+</script>
+
 </body>
 </html>
