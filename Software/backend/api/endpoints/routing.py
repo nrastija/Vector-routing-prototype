@@ -19,3 +19,16 @@ def get_optimal_route(data: RouteRequest):
         raise HTTPException(status_code=400, detail=result["error"])
     return result
 
+# --- Alternative Routes ---
+@router.post("/alternative", tags=["Routing"], response_model=Dict[str, List[RouteResponse]])
+def get_alternative_routes(data: RouteRequest):
+    result = db.find_alternative_routes(
+        graph=db.graph,
+        source_coords=data.source_coords,
+        dest_coords=data.dest_coords
+    )
+
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+
+    return {"alternatives": result["alternatives"]}
