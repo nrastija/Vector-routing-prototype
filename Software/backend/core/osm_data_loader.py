@@ -23,7 +23,7 @@ def fetch_osm_data(
     Returns:
         dict with "graph", "nodes", and "edges"
     """
-    os.makedirs("data", exist_ok=True)
+    os.makedirs("backend/data", exist_ok=True)
 
     ox.settings.timeout = 300
     ox.settings.log_console = True
