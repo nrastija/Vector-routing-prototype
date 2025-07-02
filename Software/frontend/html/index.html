@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Route Planner</title>
@@ -14,47 +13,45 @@
 <body>
 
 <body class="h-screen w-screen overflow-hidden">
-  <div class="flex h-full">
-    <!-- Sidebar -->
-    <div class="w-1/3 bg-gray-100 p-6 flex flex-col justify-between shadow-md">
-      <div>
-        <h1 class="text-2xl font-bold mb-4">Vector Route Planner</h1>
-        <p class="text-sm mb-6 text-gray-700">
-          Vector database route planner developed as part of my Thesis. Powered by <a href="https://leafletjs.com/" class="text-blue-600 hover:underline">Leaflet</a> and <a href="https://fastapi.tiangolo.com/" class="text-blue-600 hover:underline">FastAPI</a>  backend.
-        </p>
+<div class="flex h-full">
+  <div class="w-1/3 bg-gray-100 p-6 flex flex-col justify-between shadow-md">
+    <div>
+      <h1 class="text-2xl font-bold mb-4">Vector Route Planner</h1>
+      <p class="text-sm mb-6 text-gray-700">
+        Vector database route planner developed as part of my Thesis. Powered by <a href="https://leafletjs.com/" class="text-blue-600 hover:underline">Leaflet</a> and <a href="https://fastapi.tiangolo.com/" class="text-blue-600 hover:underline">FastAPI</a>  backend.
+      </p>
 
-        <div class="mb-4">
-          <label for="from" class="block text-sm font-medium text-gray-700">Start:</label>
-          <input id="from" class="w-full mt-1 p-2 border border-gray-300 rounded" placeholder="e.g. Varaždin">
-        </div>
-
-        <div class="mb-4">
-          <label for="to" class="block text-sm font-medium text-gray-700">Destination:</label>
-          <input id="to" class="w-full mt-1 p-2 border border-gray-300 rounded" placeholder="e.g. Čakovec">
-        </div>
-
-        <div class="mb-4">
-          <label for="type" class="block text-sm font-medium text-gray-700">Route Type:</label>
-          <select id="type" class="w-full mt-1 p-2 border border-gray-300 rounded">
-            <option value="optimal">Optimal</option>
-            <option value="no_motorways">No Motorways</option>
-            <option value="scenic_route">Scenic</option>
-          </select>
-        </div>
-
-        <button onclick="planRoute()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-          Plan Route
-        </button>
+      <div class="mb-4">
+        <label for="from" class="block text-sm font-medium text-gray-700">Start:</label>
+        <input id="from" class="w-full mt-1 p-2 border border-gray-300 rounded" placeholder="e.g. Varaždin">
       </div>
 
-      <footer class="text-xs text-gray-600 text-center mt-6">
-        © 2025 Route Planning App | FOI Thesis project
-      </footer>
+      <div class="mb-4">
+        <label for="to" class="block text-sm font-medium text-gray-700">Destination:</label>
+        <input id="to" class="w-full mt-1 p-2 border border-gray-300 rounded" placeholder="e.g. Čakovec">
+      </div>
+
+      <div class="mb-4">
+        <label for="type" class="block text-sm font-medium text-gray-700">Route Type:</label>
+        <select id="type" class="w-full mt-1 p-2 border border-gray-300 rounded">
+          <option value="optimal">Optimal</option>
+          <option value="no_motorways">No Motorways</option>
+          <option value="scenic_route">Scenic</option>
+        </select>
+      </div>
+
+      <button onclick="planRoute()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+        Plan Route
+      </button>
     </div>
 
-    <!-- Map -->
-    <div id="map" class="flex-1 h-full"></div>
+    <footer class="text-xs text-gray-600 text-center mt-6">
+      © 2025 Route Planning App | FOI Thesis project
+    </footer>
   </div>
+
+  <div id="map" class="flex-1 h-full"></div>
+</div>
 
 <script>
   const map = L.map('map').setView([46.3074, 16.3386], 7); // Inital view focused on Varaždin center
@@ -62,10 +59,30 @@
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
-  async function planRoute() {
-    
-  }
+  let startMarker = null;
+  let endMarker = null;
+  let startCoords = null;
+  let endCoords = null;
+
+   map.on('click', function (e) {
+    if (!startCoords) {
+      startCoords = [e.latlng.lat, e.latlng.lng];
+      startMarker = L.marker(startCoords).addTo(map).bindPopup("Start point").openPopup();
+      document.getElementById('from').value = `${startCoords[0].toFixed(5)}, ${startCoords[1].toFixed(5)}`;
+    } else if (!endCoords) {
+      endCoords = [e.latlng.lat, e.latlng.lng];
+      endMarker = L.marker(endCoords).addTo(map).bindPopup("End point").openPopup();
+      document.getElementById('to').value = `${endCoords[0].toFixed(5)}, ${endCoords[1].toFixed(5)}`;
+    } else {
+      map.removeLayer(startMarker);
+      map.removeLayer(endMarker);
+      startCoords = [e.latlng.lat, e.latlng.lng];
+      endCoords = null;
+      startMarker = L.marker(startCoords).addTo(map).bindPopup("Start").openPopup();
+      document.getElementById('from').value = `${startCoords[0].toFixed(5)}, ${startCoords[1].toFixed(5)}`;
+      document.getElementById('to').value = "";
+    }
+  });
 </script>
 
 </body>
-</html>
