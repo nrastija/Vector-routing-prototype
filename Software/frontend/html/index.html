@@ -32,9 +32,19 @@
         <input id="to" class="w-full mt-1 p-2 border border-gray-300 rounded" placeholder="e.g. Čakovec">
       </div>
 
-      <button onclick="FetchRoute()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-        Plan Route
-      </button>
+      <div class="flex flex-col justify-between h-full">
+        <div >
+          <button onclick="FetchRoute()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+            Plan Route
+          </button>
+        </div>
+
+        <div class="self-center" >
+          <button onclick="TestRedirect()" class="p-4 w-full bg-blue-400 text-white py-2 rounded hover:bg-blue-700 transition">
+            Check Existing Route Plan
+          </button>
+        </div>
+      </div>
     </div>
 
     <footer class="text-xs text-gray-600 text-center mt-6">
@@ -110,22 +120,21 @@
          body: JSON.stringify(coords)
        });
 
-       const raw = await response.text(); // read raw response
+       const raw = await response.text();
        console.log("Raw response:", raw);
 
        if (!response.ok) {
-         throw new Error(raw); // show plain error message if backend returns HTML
+         throw new Error(raw);
        }
 
        let data;
        try {
-         data = JSON.parse(raw); // safely parse manually
+         data = JSON.parse(raw);
        } catch (err) {
          throw new Error("Response is not valid JSON.");
        }
 
-       console.log("Parsed route:", data);
-       drawRoute(data.waypoints);
+       RedirectToMainSite(data)
 
      } catch (err) {
        alert("Error: " + err.message);
@@ -133,13 +142,24 @@
      }
 
    }
-   let polyline = null;
 
-   function drawRoute(waypoints) {
-     if (polyline) map.removeLayer(polyline);
-     polyline = L.polyline(waypoints, {color: "blue", weight: 5}).addTo(map);
-     map.fitBounds(polyline.getBounds());
+   function RedirectToMainSite(optimalRouteData){
+      startCity = getCityNameFromCoords(startCoords[0], startCoords[1])
+      endCity = getCityNameFromCoords(endCoords[0], endCoords[1])
+
+      localStorage.setItem("routeData", JSON.stringify(optimalRouteData));
+      localStorage.setItem("cityInfo", JSON.stringify({
+        start: startCity,
+        end: endCity
+      }));
+
+      window.location.href = "/route/optimal"
    }
+
+   function TestRedirect(){
+     window.location.href = "/route/optimal"
+   }
+
 
 </script>
 
