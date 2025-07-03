@@ -46,6 +46,8 @@
 </div>
 
 <script>
+  document.getElementById('from').value = "";
+  document.getElementById('to').value = "";
   const map = L.map('map').setView([46.3074, 16.3386], 7); // Inital view focused on Varaždin center
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
@@ -99,7 +101,6 @@
        dest_coords: endCoords
      };
 
-     console.log("coords:" + coords)
      try {
        const response = await fetch(`${BACKEND_BASE_URL}/route/optimal`, {
          method: "POST",
