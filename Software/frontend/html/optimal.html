@@ -49,6 +49,12 @@
         </div>
       </div>
 
+      <div class="self-center w-1/2" >
+        <button onclick="LoadOptimalRouteImage(true)" class="p-4 w-full bg-blue-400 text-white py-2 rounded hover:bg-blue-700 transition">
+          Load Optimal Route Image  
+        </button>
+      </div>
+
       <footer class="text-xs text-gray-500 text-center mt-6">
         © 2025 Route Planning App | FOI Thesis project
       </footer>
@@ -60,6 +66,34 @@
         class="w-full h-full border-0"
       ></iframe>
     </div>
+   
+<div
+  id="imageModal"
+  class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-999"
+>
+  <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md relative">
+    <button
+      onclick="LoadOptimalRouteImage(false)"
+      class="absolute top-2 right-2 text-gray-600 hover:text-black text-xl font-bold"
+    >
+      x
+    </button>
+
+    <h4 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">
+      Optimal Route Image
+    </h4>
+    <img
+      id="optimalRouteImage"
+      src=""
+      alt="Optimal Route Image"
+      class="w-full h-auto rounded shadow-md mb-3"
+    />
+    <p class="text-sm text-gray-600">
+      Static image of the optimal route calculated by the vector database.
+    </p>
+  </div>
+</div>
+
 
   </div>
 </body>
@@ -100,6 +134,18 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 
+function LoadOptimalRouteImage(show) {
+  const modal = document.getElementById("imageModal");
+  const image = document.getElementById("optimalRouteImage");
+
+  if (show) {
+    image.src = `http://127.0.0.1:8000/data/routes/route_static_DB.png`;
+    modal.classList.remove("hidden");
+  } else {
+    modal.classList.add("hidden");
+    image.src = ""; 
+  }
+}
 
 
 </script>
