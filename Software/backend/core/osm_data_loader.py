@@ -3,7 +3,8 @@ import osmnx as ox
 import pandas as pd
 import geopandas as gpd
 from typing import Dict, List, Optional
-
+from osmnx._errors import InsufficientResponseError
+from photon import photon
 geolocator = Nominatim(user_agent="vector-planner")
 
 def get_city_name(lat: float, lon: float) -> str:
@@ -25,12 +26,27 @@ def get_city_name(lat: float, lon: float) -> str:
 def is_coords(item):
     return isinstance(item, (list, tuple)) and len(item) == 2 and all(isinstance(i, (int, float)) for i in item)
 
-def safe_geocode(place_name: str):
+import osmnx as ox
+from shapely.geometry import Point
+import geopandas as gpd
+
+def safe_geocode(place_name):
     try:
-        return ox.geocode_to_gdf(place_name)  # default (first result)
-    except TypeError:
-        print(f"Default geocode failed for: {place_name}, trying with which_result=2")
-        return ox.geocode_to_gdf(place_name, which_result=2)
+        gdf = ox.geocode_to_gdf(place_name, which_result=1)
+        geom = gdf.geometry.iloc[0]
+        if geom.geom_type not in ("Polygon", "MultiPolygon"):
+            raise ValueError(f"Geocoded result is not a Polygon/MultiPolygon (got {geom.geom_type})")
+        return gdf
+    except Exception as e:
+        print(f"Attempt failed for '{place_name}': {e}")
+        try:
+            lat, lon = ox.geocode(place_name)
+            buffer = Point(lon, lat).buffer(0.05)  # oko 5 km
+            print(f"Using fallback circular buffer for '{place_name}'")
+            return gpd.GeoDataFrame(geometry=[buffer], crs="EPSG:4326")
+        except Exception as e2:
+            print(f"Fallback geocoding also failed for '{place_name}': {e2}")
+            raise
 
 
 def fetch_osm_data(
