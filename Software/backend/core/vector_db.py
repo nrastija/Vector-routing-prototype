@@ -134,8 +134,8 @@ class VectorDatabase:
                 show=False,
                 close=True  # Changed to True to properly close the figure
             )
-            plt.savefig(plot_path, dpi=300, bbox_inches='tight')
-            plt.close()
+            fig.savefig(plot_path, dpi=300, bbox_inches='tight')
+            plt.close(fig) 
 
             # Generate Folium map (save as HTML)
             map_path = os.path.join(output_dir, "route_map_DB.html")  # Changed to HTML
