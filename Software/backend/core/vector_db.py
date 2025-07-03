@@ -116,7 +116,7 @@ class VectorDatabase:
             realistic_time_min = ideal_time_min * 1.3  # 30% buffer
             distance_km = total_distance / 1000
             average_speed_kmh = distance_km / (realistic_time_min / 60)
-            waypoints = [(graph.nodes[n]['y'], graph.nodes[n]['x']) for n in path]
+            waypoints = [[graph.nodes[n]['y'], graph.nodes[n]['x']] for n in path]
 
             # Set up output directory
             current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -222,6 +222,8 @@ class VectorDatabase:
                 folium.Marker(waypoints[0], popup="Start", icon=folium.Icon(color='green')).add_to(m)
                 folium.Marker(waypoints[-1], popup="End", icon=folium.Icon(color='red')).add_to(m)
                 m.save(map_path)
+
+                print(waypoints)
 
                 routes.append({
                     "index": i + 1,

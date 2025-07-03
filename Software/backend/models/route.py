@@ -13,3 +13,5 @@ class RouteResponse(BaseModel):
     ideal_time_min: float
     realistic_time_min: float
     average_speed_kmh: float
+    waypoints: List[List[float]]
+
