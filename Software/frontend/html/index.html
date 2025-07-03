@@ -73,6 +73,9 @@
   let endMarker = null;
   let startCoords = null;
   let endCoords = null;
+  let startCity = null;
+  let endCity = null;
+
 
    map.on('click', function (e) {
     if (!startCoords) {
@@ -80,12 +83,14 @@
       startMarker = L.marker(startCoords).addTo(map).bindPopup("Start point").openPopup();
       getCityNameFromCoords(startCoords[0], startCoords[1]).then(cityName => {
         document.getElementById('from').value = cityName;
+        startCity = cityName;
       });
     } else if (!endCoords) {
       endCoords = [e.latlng.lat, e.latlng.lng];
       endMarker = L.marker(endCoords).addTo(map).bindPopup("End point").openPopup();
       getCityNameFromCoords(endCoords[0], endCoords[1]).then(cityName => {
         document.getElementById('to').value = cityName;
+        endCity = cityName;
       });
     } else {
       map.removeLayer(startMarker);
@@ -144,9 +149,7 @@
    }
 
    function RedirectToMainSite(optimalRouteData){
-      startCity = getCityNameFromCoords(startCoords[0], startCoords[1])
-      endCity = getCityNameFromCoords(endCoords[0], endCoords[1])
-
+      
       localStorage.setItem("routeData", JSON.stringify(optimalRouteData));
       localStorage.setItem("cityInfo", JSON.stringify({
         start: startCity,

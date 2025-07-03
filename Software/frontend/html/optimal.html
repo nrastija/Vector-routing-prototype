@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Main site with optimal route</title>
+
+  <!-- Leaflet JS & Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../static/config.js"></script>
+</head>
+<body>
+
+<body class="h-screen w-screen overflow-hidden">
+<div class="flex h-full">
+  <div class="w-1/3 bg-gray-100 p-6 flex flex-col justify-between shadow-md">
+    <div>
+      <button onclick="ReturnToIndex()" class="w-[10%] rounded-xl bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+        ←
+      </button>
+      <h1 class="text-2xl font-bold mb-4">Optimal Route</h1>
+      <p class="text-sm mb-6 text-gray-700">
+        Route plan from <span id="cityStart"> </span> to <span id="cityEnd"> </span>
+      </p>
+      <p class="text-sm mb-6 text-gray-700">
+        Distance: <span id="routeDistance"> </span> km  <br>
+        Ideal travel time: <span id="idealTravelTime"> </span> minutes
+        Realistic travel time: <span id="realisticTravelTime"> </span> minutes
+        Average speed: <span id="averageSpeed"> </span> km/h
+        Vector path: <span id="vectorPath"> </span>
+
+      </p>
+    </div>
+
+    <footer class="text-xs text-gray-600 text-center mt-6">
+      © 2025 Route Planning App | FOI Thesis project
+    </footer>
+  </div>
+
+  <div id="map" class="flex-1 h-full">
+  <iframe
+    id="routeMap"
+    class="w-full h-full border-0"
+  ></iframe>
+</div>
+
+</div>
+
+<script>
+const timestamp = new Date().getTime();
+document.getElementById("routeMap").src = `http://127.0.0.1:8000/data/routes/route_map_DB.html?t=${timestamp}`;
+
+function ReturnToIndex(){
+ window.location.href = "/"
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  const routeData = localStorage.getItem("routeData");
+  const cityInfo = localStorage.getItem("cityInfo");
+
+  if (routeData && cityInfo) {
+    const optimalRouteData = JSON.parse(routeData);
+    const cityInfoData = JSON.parse(cityInfo);
+
+    document.getElementById("cityStart").textContent = cityInfoData.start;
+    document.getElementById("cityEnd").textContent = cityInfoData.end;
+
+    document.getElementById("routeDistance").textContent = optimalRouteData.distance_km.toFixed(2);
+    document.getElementById("idealTravelTime").textContent = optimalRouteData.ideal_time_min.toFixed(2);
+    document.getElementById("realisticTravelTime").textContent = optimalRouteData.realistic_time_min.toFixed(2);
+    document.getElementById("averageSpeed").textContent = optimalRouteData.average_speed_kmh.toFixed(2);
+    document.getElementById("vectorPath").textContent = optimalRouteData.waypoints
+    .map(point => `(${point[0]}, ${point[1]})`)
+    .join(" → ");
+
+  } else {
+    console.error("No route data found in localStorage.");
+  }
+});
+
+
+
+</script>
+
+</body>
