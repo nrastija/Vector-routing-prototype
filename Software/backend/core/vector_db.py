@@ -85,14 +85,12 @@ class VectorDatabase:
             graph.graph['crs'] = 'epsg:4326'
 
         try:
-            # Get nodes and check connectivity
             source_node = ox.distance.nearest_nodes(graph, X=source_coords[1], Y=source_coords[0])
             dest_node = ox.distance.nearest_nodes(graph, X=dest_coords[1], Y=dest_coords[0])
 
             if not nx.has_path(graph, source_node, dest_node):
                 return {"error": "No path exists between these nodes"}
 
-            # Calculate path and metrics
             path = nx.shortest_path(graph, source=source_node, target=dest_node, weight='length')
 
             total_distance = 0
@@ -118,12 +116,10 @@ class VectorDatabase:
             average_speed_kmh = distance_km / (realistic_time_min / 60)
             waypoints = [[graph.nodes[n]['y'], graph.nodes[n]['x']] for n in path]
 
-            # Set up output directory
             current_dir = os.path.dirname(os.path.abspath(__file__))
             output_dir = os.path.join(current_dir, "..", "data", "routes")
             os.makedirs(output_dir, exist_ok=True)
 
-            # Save static plot
             plot_path = os.path.join(output_dir, "route_static_DB.png")
             fig, ax = ox.plot_graph_route(
                 graph,
@@ -132,12 +128,11 @@ class VectorDatabase:
                 node_size=0,
                 bgcolor='white',
                 show=False,
-                close=True  # Changed to True to properly close the figure
+                close=True  
             )
             fig.savefig(plot_path, dpi=300, bbox_inches='tight')
             plt.close(fig) 
 
-            # Generate Folium map (save as HTML)
             map_path = os.path.join(output_dir, "route_map_DB.html")  # Changed to HTML
             m = folium.Map(location=source_coords, zoom_start=13)
             folium.PolyLine(waypoints, color='blue', weight=5, opacity=0.7).add_to(m)
@@ -145,7 +140,6 @@ class VectorDatabase:
             folium.Marker(waypoints[-1], popup="End", icon=folium.Icon(color='red')).add_to(m)
             m.save(map_path)
 
-            # Return paths relative to web root
             return {
                 "path": path,
                 "distance_km": distance_km,
@@ -184,7 +178,7 @@ class VectorDatabase:
                 max(alternative_routes) + 1
             ))
 
-            selected_paths = [all_paths[i] for i in alternative_routes]# Skip optimal path - function find_optimal_route
+            selected_paths = [all_paths[i] for i in alternative_routes]
 
             routes = []
             for i, path in enumerate(selected_paths):

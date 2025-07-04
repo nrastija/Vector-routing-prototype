@@ -1,8 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from backend.models.route import RouteRequest, RouteResponse
-from typing import List, Optional, Dict, Any
+from typing import List, Dict
+import osmnx as ox
+import os
 from backend.core.vector_db import VectorDatabase
 from backend.core.osm_data_loader import fetch_osm_data
+from backend.core.analyze import analyze_network, visualize_full_network, visualize_network_3d
 router = APIRouter()
 db = VectorDatabase(vector_size=2)
 
@@ -80,3 +83,23 @@ def get_alternative_routes(data: RouteRequest):
         raise HTTPException(status_code=400, detail=result["error"])
 
     return {"alternatives": result["alternatives"]}
+
+
+# --- Graphs for optimal route ---
+@router.get("/graphs", tags=["Routing"], response_model=Dict[str, str])
+def generate_graphs():
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # Apsolutna putanja do .graphml fajla
+        graphml_path = os.path.join(base_dir, "..", "..", "data", "croatia_cities.graphml")
+        graphml_path = os.path.normpath(graphml_path)
+        graph = ox.load_graphml(graphml_path)
+        analyze_network(graph)
+        visualize_full_network(graph)
+        visualize_network_3d(graph)
+
+        return {"message": "Graphs generated successfully."}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
