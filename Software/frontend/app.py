@@ -9,6 +9,11 @@ def index():
 def optimal():
     return render_template('optimal.html')
 
+@app.route('/route/alternative')
+def alternative():
+    return render_template('alternative.html')
+
+
 @app.route('/graphs/optimal')
 def graphs_optimal():
     return render_template('graphs.html')

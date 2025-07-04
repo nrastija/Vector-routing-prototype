@@ -7,6 +7,7 @@ from backend.core.vector_db import VectorDatabase
 from backend.core.osm_data_loader import fetch_osm_data
 from backend.core.analyze import analyze_network, visualize_full_network, visualize_network_3d
 router = APIRouter()
+
 db = VectorDatabase(vector_size=2)
 
 def WriteConsoleOutput(result) -> None:
@@ -22,9 +23,11 @@ def WriteConsoleOutput(result) -> None:
         print(f"  - {waypoint}")
     print("========================================================")
 
+
 # --- Optimal Route ---
 @router.post("/optimal", tags=["Routing"], response_model=RouteResponse)
 def get_optimal_route(data: RouteRequest):
+    global OSMGraph, OSMNodes 
     try:
         start_coords = data.source_coords
         end_coords = data.dest_coords
@@ -34,13 +37,13 @@ def get_optimal_route(data: RouteRequest):
         route_coords = [start_coords, end_coords]
 
         osm_result = fetch_osm_data(route_coords)
-        graph = osm_result["graph"]
-        nodes = osm_result["nodes"]
+        OSMGraph = osm_result["graph"]
+        OSMNodes = osm_result["nodes"]
 
-        db.create_embeddings(nodes)
+        db.create_embeddings(OSMNodes)
 
         result = db.find_optimal_route(
-            graph=graph,
+            graph=OSMGraph,
             source_coords=start_coords,
             dest_coords=end_coords
         )
@@ -73,8 +76,13 @@ def get_optimal_route(data: RouteRequest):
 # --- Alternative Routes ---
 @router.post("/alternative", tags=["Routing"], response_model=Dict[str, List[RouteResponse]])
 def get_alternative_routes(data: RouteRequest):
+    global OSMGraph, OSMNodes  # ← ADD THIS
+
+    if OSMGraph is None or OSMNodes is None:
+        raise HTTPException(status_code=400, detail="No route has been calculated yet")
+
     result = db.find_alternative_routes(
-        graph=db.graph,
+        graph=OSMGraph,
         source_coords=data.source_coords,
         dest_coords=data.dest_coords
     )
