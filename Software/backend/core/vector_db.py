@@ -202,14 +202,15 @@ class VectorDatabase:
 
                 realistic_time_min = ideal_time_min * 1.3
                 distance_km = total_distance / 1000
-                average_speed_kmh = total_distance / (realistic_time_min / 60)
+                average_speed_kmh = distance_km / (realistic_time_min / 60)
                 waypoints = [(graph.nodes[n]['y'], graph.nodes[n]['x']) for n in path]
 
                 current_dir = os.path.dirname(__file__)
-                output_dir = os.path.join(current_dir, "data", "routes")
+                output_dir = os.path.join(current_dir, "..", "data", "routes")
                 os.makedirs(output_dir, exist_ok=True)
 
-                # Save map for each route
+
+                # Save map for each route1
                 map_path = os.path.join(output_dir, f"route_alt_{i + 1}.html")
                 m = folium.Map(location=source_coords, zoom_start=12)
                 folium.PolyLine(waypoints, color="blue", weight=5, opacity=0.7).add_to(m)
