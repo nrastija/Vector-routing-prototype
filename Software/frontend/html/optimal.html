@@ -73,6 +73,12 @@
           Generate and Load Graphs for route
         </button>
       </div>
+      
+      <div class="self-center w-1/2" >
+        <button onclick="GenerateAlternativeRoutes()" class="w-full bg-blue-400 text-white py-2 rounded hover:bg-blue-700 transition">
+          Generate and 3 Alternative Routes
+        </button>
+      </div>
 
       <footer class="text-xs text-gray-500 text-center mt-6">
         &copy; 2025 Route Planning App | Niko Rastija
@@ -206,8 +212,45 @@ async function LoadGraphs() {
   }
 }
 
+async function GenerateAlternativeRoutes() {
+  document.getElementById("loadingIndicator").classList.remove("hidden");
+
+  const coordData = localStorage.getItem("coords");
+  const coords = JSON.parse(coordData);
+
+  try {
+    const response = await fetch(`${BACKEND_BASE_URL}/route/alternative`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(coords)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || `Server responded with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Alternative routes loaded successfully:", data);
+    localStorage.setItem("alternativeRouteData", JSON.stringify(data));
+    RedirectToAlternativeRoutes();
+
+  } catch (err) {
+    alert(`Failed to load alternative routes: ${err.message}`);
+    console.error("Alternative route loading failed:", err);
+  } finally {
+    document.getElementById("loadingIndicator").classList.add("hidden");
+  }
+}
+
 function RedirectToGraphSite(){
   window.location.href = "/graphs/optimal"
+}
+
+function RedirectToAlternativeRoutes(){
+  window.location.href = "/route/alternative"
 }
 </script>
 

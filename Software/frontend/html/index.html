@@ -132,6 +132,9 @@
        dest_coords: endCoords
      };
 
+     localStorage.setItem("coords", JSON.stringify(coords));
+
+
      try {
        const response = await fetch(`${BACKEND_BASE_URL}/route/optimal`, {
          method: "POST",
