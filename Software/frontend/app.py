@@ -9,5 +9,9 @@ def index():
 def optimal():
     return render_template('optimal.html')
 
+@app.route('/graphs/optimal')
+def graphs_optimal():
+    return render_template('graphs.html')
+
 if __name__ == "__main__":
     app.run(debug=True, port=3000)
