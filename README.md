@@ -33,9 +33,9 @@ This project explores the use of **vector databases** in optimizing user travel 
 | Vector DB       | Qdrant     |
 | Backend         | FastAPI (Python)   |
 | Data Source     | osmnx (Python) + Overpass API |
-| Routing Engine  | OSRM or networkx **TBD** |
-| Frontend | Leaflet.js + Flask (if needed **TBD**) |
-| Deployment | **TBD** if needed |
+| Routing Engine  | networkx  |
+| Frontend | HTML + Tailwind CSS + Leaflet.js + Flask  |
+| Deployment | Out of scope of the project |
 
 ---
 
