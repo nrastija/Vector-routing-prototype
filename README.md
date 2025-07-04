@@ -12,12 +12,15 @@ This project explores the use of **vector databases** in optimizing user travel 
 - Store vectors and metadata in a vector database -- TBD.
 
 ### Phase 2: Backend & Search Logic
-- Set up a backend API (Python FastAPI or Node.js).
-- Perform Approximate Nearest Neighbor (ANN) searches to find nearby cities.
-- Simulate route traversal from point A to B using vector chaining.
+- Set up a backend API 
+- Implement optimal route search as well as alternative route search.
+- Simulate route traversal from point A to B using vector chaining (OSM vectors).
 - Return a detailed route: waypoints, distance, estimated duration.
 
-### Phase 3: Frontend (Optional)
+### Phase 3: Frontend 
+- Implement frontend app via HTML, Tailwind CSS and LeafletJS
+- Integrate Flask for serving HTML templates and handling basic routing (in frontend)
+- Integrate frontend with backend APIs
 
 ### Phase 4: Testing & Thesis Integration
 
