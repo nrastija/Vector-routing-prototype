@@ -8,7 +8,9 @@ import os
 import networkx as nx
 import osmnx as ox
 import plotly.graph_objects as go
+from backend.benchmark import benchmark
 
+@benchmark()
 def convert_to_simple_graph(G_multigraph):
     """
     Convert a NetworkX MultiGraph or MultiDiGraph to a simple Graph or DiGraph.
@@ -141,7 +143,7 @@ def analyze_network(multiG):
     except Exception as e:
         print(f"❌ Error during graph analysis: {e}")
 
-
+@benchmark()
 def visualize_full_network(G):
     edge_colors = []
     for _, _, data in G.edges(data=True):
@@ -211,6 +213,7 @@ def visualize_full_network(G):
 
     return fig
 
+@benchmark()
 def visualize_network_3d(G, output_html="backend/data/OSM graphs/OSM_network_3D.html"):
 
     G_simple = nx.Graph()

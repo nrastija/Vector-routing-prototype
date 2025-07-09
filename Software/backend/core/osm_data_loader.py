@@ -5,6 +5,8 @@ import geopandas as gpd
 from typing import Dict, List, Optional
 from osmnx._errors import InsufficientResponseError
 from photon import photon
+from backend.benchmark import benchmark
+
 geolocator = Nominatim(user_agent="vector-planner")
 
 def get_city_name(lat: float, lon: float) -> str:
@@ -49,6 +51,7 @@ def safe_geocode(place_name):
             raise
 
 
+@benchmark()
 def fetch_osm_data(
         recieved_data: List[str] = ["Varaždin, Croatia", "Čakovec, Croatia"],
         network_type: str = "drive",
