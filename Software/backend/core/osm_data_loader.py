@@ -1,21 +1,64 @@
-import networkx as nx
+from geopy.geocoders import Nominatim
 import osmnx as ox
 import pandas as pd
 import geopandas as gpd
-import os
 from typing import Dict, List, Optional
+from backend.benchmark import benchmark
+from shapely.geometry import Point
 
+geolocator = Nominatim(user_agent="vector-planner")
+
+def get_city_name(lat: float, lon: float) -> str:
+    location = geolocator.reverse((lat, lon), language='en')
+
+    if not location or not location.raw or "address" not in location.raw:
+        raise ValueError("Unable to reverse geocode the coordinates.")
+
+    address = location.raw["address"]
+    city = address.get("city") or address.get("town") or address.get("village") or address.get("municipality")
+    country = address.get("country")
+
+    if not city or not country:
+        raise ValueError("Could not determine city or country.")
+
+    full_name = f"{city}, {country}"
+    return full_name
+
+def is_coords(item):
+    return isinstance(item, (list, tuple)) and len(item) == 2 and all(isinstance(i, (int, float)) for i in item)
+
+
+def safe_geocode(place_name):
+    try:
+        gdf = ox.geocode_to_gdf(place_name, which_result=1)
+        geom = gdf.geometry.iloc[0]
+        if geom.geom_type not in ("Polygon", "MultiPolygon"):
+            raise ValueError(f"Geocoded result is not a Polygon/MultiPolygon (got {geom.geom_type})")
+        return gdf
+    except Exception as e:
+        print(f"Attempt failed for '{place_name}': {e}")
+        try:
+            lat, lon = ox.geocode(place_name)
+            buffer = Point(lon, lat).buffer(0.05)  # oko 5 km
+            print(f"Using fallback circular buffer for '{place_name}'")
+            return gpd.GeoDataFrame(geometry=[buffer], crs="EPSG:4326")
+        except Exception as e2:
+            print(f"Fallback geocoding also failed for '{place_name}': {e2}")
+            raise
+
+
+@benchmark()
 def fetch_osm_data(
-        place_names: List[str] = ["Varaždin, Croatia", "Čakovec, Croatia"],
+        received_data: List[str] = ["Varaždin, Croatia", "Čakovec, Croatia"],
         network_type: str = "drive",
-        save_to_file: Optional[str] = "data/croatia_cities.graphml",
+        save_to_file: Optional[str] = "backend/data/croatia_cities.graphml",
         padding_km: float = 5
 ) -> Dict:
     """
     Fetch and merge OSM data for multiple cities using an expanded bounding box.
 
     Args:
-        place_names: List of OSM-compatible place names
+        received_data: List of OSM-compatible place names
         network_type: "drive", "walk", "bike"
         save_to_file: Optional path to save the merged graph
         padding_km: Extra distance added to bbox in all directions
@@ -23,14 +66,26 @@ def fetch_osm_data(
     Returns:
         dict with "graph", "nodes", and "edges"
     """
-    os.makedirs("backend/data", exist_ok=True)
 
     ox.settings.timeout = 300
     ox.settings.log_console = True
 
+    place_names = []
+    for item in received_data:
+        if is_coords(item):
+            name = get_city_name(*item)
+            place_names.append(name)
+        elif isinstance(item, str):
+            place_names.append(item)
+        else:
+            raise ValueError(f"Unsupported route input: {item}")
+
+    print(f"Fetching {len(place_names)} cities...", flush=True)
+    print(place_names[0] + " - " + place_names[1])
+
     # 1. Fetch city boundaries
     print("Fetching city boundaries...")
-    city_boundaries = [ox.geocode_to_gdf(name) for name in place_names]
+    city_boundaries = [safe_geocode(name) for name in place_names]
     city_gdf = gpd.GeoDataFrame(pd.concat(city_boundaries, ignore_index=True))
     city_gdf.crs = "EPSG:4326"
 
@@ -87,8 +142,8 @@ def fetch_osm_data(
         })
 
     # Save CSVs
-    pd.DataFrame(nodes).to_csv("data/OSMLoader_nodes.csv", index=False)
-    pd.DataFrame(edges).to_csv("data/OSMLoader_edges.csv", index=False)
+    pd.DataFrame(nodes).to_csv("backend/data/OSMLoader_nodes.csv", index=False)
+    pd.DataFrame(edges).to_csv("backend/data/OSMLoader_edges.csv", index=False)
     print("Saved expanded nodes and edges to CSV")
 
     return {

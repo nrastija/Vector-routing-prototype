@@ -14,4 +14,4 @@ class RouteResponse(BaseModel):
     realistic_time_min: float
     average_speed_kmh: float
     waypoints: List[List[float]]
-    map_html: str
+
