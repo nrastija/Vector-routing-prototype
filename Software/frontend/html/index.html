@@ -19,7 +19,6 @@
     }
   </style>
 </head>
-<body>
 
 <body class="h-screen w-screen overflow-hidden">
 <div class="flex h-full">
@@ -155,7 +154,7 @@
        try {
          data = JSON.parse(raw);
        } catch (err) {
-         hideLoadingWithTimer
+         hideLoadingWithTimer();
          throw new Error("Response is not valid JSON.");
        }
 

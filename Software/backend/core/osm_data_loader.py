@@ -3,9 +3,8 @@ import osmnx as ox
 import pandas as pd
 import geopandas as gpd
 from typing import Dict, List, Optional
-from osmnx._errors import InsufficientResponseError
-from photon import photon
 from backend.benchmark import benchmark
+from shapely.geometry import Point
 
 geolocator = Nominatim(user_agent="vector-planner")
 
@@ -28,9 +27,6 @@ def get_city_name(lat: float, lon: float) -> str:
 def is_coords(item):
     return isinstance(item, (list, tuple)) and len(item) == 2 and all(isinstance(i, (int, float)) for i in item)
 
-import osmnx as ox
-from shapely.geometry import Point
-import geopandas as gpd
 
 def safe_geocode(place_name):
     try:
@@ -53,7 +49,7 @@ def safe_geocode(place_name):
 
 @benchmark()
 def fetch_osm_data(
-        recieved_data: List[str] = ["Varaždin, Croatia", "Čakovec, Croatia"],
+        received_data: List[str] = ["Varaždin, Croatia", "Čakovec, Croatia"],
         network_type: str = "drive",
         save_to_file: Optional[str] = "backend/data/croatia_cities.graphml",
         padding_km: float = 5
@@ -62,7 +58,7 @@ def fetch_osm_data(
     Fetch and merge OSM data for multiple cities using an expanded bounding box.
 
     Args:
-        recieved_data: List of OSM-compatible place names
+        received_data: List of OSM-compatible place names
         network_type: "drive", "walk", "bike"
         save_to_file: Optional path to save the merged graph
         padding_km: Extra distance added to bbox in all directions
@@ -75,7 +71,7 @@ def fetch_osm_data(
     ox.settings.log_console = True
 
     place_names = []
-    for item in recieved_data:
+    for item in received_data:
         if is_coords(item):
             name = get_city_name(*item)
             place_names.append(name)

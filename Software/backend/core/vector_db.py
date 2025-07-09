@@ -185,7 +185,7 @@ class VectorDatabase:
             waypoints = [[self.graph.nodes[n]['y'], self.graph.nodes[n]['x']] for n in best_path]
             output_dir = ensure_routes_dir_exists()
             
-            plot_path = os.path.join(output_dir, "route_static.png")
+            plot_path = os.path.join(output_dir, "route_static_DB.png")
             fig, ax = ox.plot_graph_route(
                 self.graph, best_path,
                 route_linewidth=6, node_size=0, bgcolor='white',
@@ -194,7 +194,7 @@ class VectorDatabase:
             fig.savefig(plot_path, dpi=300, bbox_inches='tight')
             plt.close(fig)
             
-            map_path = os.path.join(output_dir, "route_map.html")
+            map_path = os.path.join(output_dir, "route_map_DB.html")
             m = folium.Map(location=source_coords, zoom_start=13)
             folium.PolyLine(waypoints, color='blue', weight=5, opacity=0.7).add_to(m)
             folium.Marker(waypoints[0], popup="Start", icon=folium.Icon(color='green')).add_to(m)

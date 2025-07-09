@@ -10,14 +10,13 @@ logger = logging.getLogger("uvicorn")
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
 
-# 1. First add CORS middleware (THIS MUST COME FIRST)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=["*"],  # Okay for development
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
-    expose_headers=["*"]  # Exposes all headers
+    allow_methods=["*"],  
+    allow_headers=["*"],  
+    expose_headers=["*"]  
 )
 
 app.mount("/data/routes", StaticFiles(directory="backend/data/routes"), name="routes")
