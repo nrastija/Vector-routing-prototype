@@ -8,7 +8,7 @@ from backend.core.osm_data_loader import fetch_osm_data
 from backend.core.analyze import analyze_network, visualize_full_network, visualize_network_3d
 router = APIRouter()
 
-db = VectorDatabase(vector_size=2)
+db = VectorDatabase(vector_size=64)
 
 def WriteConsoleOutput(result) -> None:
     print("===================== Optimal Route ====================")
@@ -40,10 +40,9 @@ def get_optimal_route(data: RouteRequest):
         OSMGraph = osm_result["graph"]
         OSMNodes = osm_result["nodes"]
 
-        db.create_embeddings(OSMNodes)
+        db.create_embeddings(OSMGraph)
 
         result = db.find_optimal_route(
-            graph=OSMGraph,
             source_coords=start_coords,
             dest_coords=end_coords
         )
@@ -82,7 +81,6 @@ def get_alternative_routes(data: RouteRequest):
         raise HTTPException(status_code=400, detail="No route has been calculated yet")
 
     result = db.find_alternative_routes(
-        graph=OSMGraph,
         source_coords=data.source_coords,
         dest_coords=data.dest_coords
     )
